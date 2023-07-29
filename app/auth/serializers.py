@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, validator, SecretStr
 
 
 class LoginOutput(BaseModel):
@@ -27,9 +27,9 @@ class PasswordValidator(str):
 
 class LoginInput(BaseModel):
     email: EmailStr
-    password: str
+    password: str = "Test0001"
 
-    @validator("password", pre=True)
+    @validator("password", always=True)
     @classmethod
     def validate_password(cls, value):
         return PasswordValidator.validate_password(value)
@@ -37,3 +37,23 @@ class LoginInput(BaseModel):
 
 class RefreshInput(BaseModel):
     refresh_token: str
+
+
+class RegisterInput(BaseModel):
+    email: EmailStr = "user1@example.com"
+    password1: str = "Test0001"
+    password2: str = "Test0001"
+
+    @validator("password1", always=True)
+    @classmethod
+    def validate_password1(cls, value):
+        return PasswordValidator.validate_password(value)
+
+    @validator("password2", always=True)
+    @classmethod
+    def validate_password2(cls, value):
+        return PasswordValidator.validate_password(value)
+
+
+class RegisterOutput(BaseModel):
+    message: str

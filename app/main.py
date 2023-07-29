@@ -2,14 +2,15 @@ from fastapi import FastAPI, HTTPException
 import jwt
 
 from .auth.serializers import (RefreshOutput, LoginOutput,
-                               RefreshInput, LoginInput)
+                               RefreshInput, LoginInput,
+                               RegisterInput, RegisterOutput)
 from .auth.utils import create_jwt_token, JWT_SECRET
 from .auth.models import UserModel
 
 app = FastAPI()
 
 user_db = [
-    UserModel(1, "tamir@example.com", "Zere2014")
+    UserModel(1, "user@example.com", "Test0001")
 ]
 
 
@@ -17,7 +18,6 @@ user_db = [
 def post_login(login_input: LoginInput):
     email = login_input.email
     password = login_input.password
-
     try:
         user = next(u for u in user_db if u.email == email)
         if not user.check_password(password):
@@ -50,3 +50,24 @@ def post_refresh_token(refresh_input: RefreshInput):
 
     new_jwt_token = create_jwt_token(user.id)
     return new_jwt_token
+
+
+@app.post("/register", response_model=RegisterOutput)
+def register(register_input: RegisterInput):
+    email = register_input.email
+    password1 = register_input.password1
+    password2 = register_input.password2
+
+    # Check if the passwords match
+    if password1 != password2:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+
+    # Check if a user with this email already exists
+    if any(user.email == email for user in user_db):
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+
+    # Create a new user and add it to the database (for testing purposes)
+    new_user = UserModel(id=len(user_db) + 1, email=email, password=password1)
+    user_db.append(new_user)
+    print(user_db)
+    return {"message": "User successfully registered"}
